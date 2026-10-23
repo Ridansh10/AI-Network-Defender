@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+data/network_traffic.csv
+models/defended_network_ai.pkl
