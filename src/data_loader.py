@@ -8,8 +8,8 @@ def load_and_clean_data(file_path):
     df = pd.read_csv(file_path)
 
     # Cleaning the data: Drop any row that has missing values (NaN) or infinity values
-    df.replace([np.inf, -np.inf], np.nan)
-    df.dropna()
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.dropna()
 
     # Separate features (X) from the answer key label (y)
     # here 'is_attack' will be 0 for safe traffic and 1 for malicious hacker traffic

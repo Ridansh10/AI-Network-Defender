@@ -10,7 +10,7 @@ def main():
 
     # Check if the data file is in the folder
     if not os.path.exists(dataset_path):
-        print("Error: Please place your network dataset CSV file at: '{dataset_path}'")
+        print(f"Error: Please place your network dataset CSV file at: '{dataset_path}'")
         print("Hint: You can use a sample dataset from Kaggle (like NSL-KDD or CICIDS2017) to run the code!")
         return
 
