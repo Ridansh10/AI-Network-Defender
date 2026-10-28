@@ -1,48 +1,96 @@
-# Defending AI Security: Blocking Adversarial Attacks in Network Intrusion Systems
+# AI Network Defender
 
-This is the hands-on project built to accompany my research paper on cybersecurity. I wanted to see if the AI models we use to catch hackers have a hidden blind spot—and figure out how we can train them to defend themselves when hackers try to trick them.
+This project tests whether an AI model used to detect network intrusions can be fooled by small, intentional changes to network traffic data. It also tests whether the model can become more resistant to these attacks through adversarial training.
 
-## How the Project Works
-Instead of just building a simple AI app, I built a system that trains a defender AI, throws a sophisticated mathematical hack at it, and then patches its vulnerabilities. The project is split into clean, modular files:
+The project uses the CICIDS2017 dataset. A neural network is trained to classify network traffic as either benign or malicious. The Fast Gradient Method (FGSM) is then used to create slightly modified versions of the data that try to fool the model. Finally, the model is retrained using these adversarial examples to improve its robustness.
 
-### The Core Components (`src/`)
-- **`src/data_loader.py`**: Uses **Pandas** and **NumPy** to load and clean real network traffic logs. It strips out missing rows and cleanly splits the data so 80% goes to training the AI and 20% is saved to test its real-world accuracy later.
-- **`src/model_trainer.py`**: Sets up the baseline defense using a **Scikit-Learn Multi-Layer Perceptron (MLP) neural network classifier**. This builds the initial "security guard" AI that learns the baseline patterns of safe traffic vs. hacker attacks.
-- **`src/adversarial_attack.py`**: This is the test arena. It uses **IBM's Adversarial Robustness Toolbox (ART)** to act like a hacker applying the **Fast Gradient Method (FGSM)**. It makes tiny, invisible tweaks to the attack data to see if it can slip past the AI. Once it breaks the AI, it implements **Adversarial Training**—mixing these tricky samples back into the training pool to make the model more resistant to similar attacks.
+## How It Works
 
-### Running the System
-- **`main.py`**: The control script that glues all the modules together and runs the full pipeline step-by-step.
-- **`predict.py`**: A live deployment simulation. It loads the hardened model saved by the system using JobLib and simulates real-time inspection of incoming network packets.
+### 1. Data Loading
 
----
+`src/data_loader.py` loads the CICIDS2017 dataset using Pandas and NumPy.
 
-## The Results (What Happens When You Run It)
-Here is how the AI defender performs as it goes through the testing and immunization process:
+The code removes missing values and infinite values, converts the labels into a binary format, and keeps only numeric features. The data is split into 80% training data and 20% testing data.
 
-| Lifecycle Stage | What I Tested | AI Accuracy | Safety Status |
-| :--- | :--- | :--- | :--- |
-| **1. Standard AI Guard** | Regular network traffic log inputs | **98.42%** | Works great against basic, predictable threats. |
-| **2. Under Active Attack** | Hacker tweaks the data using FGSM | **31.15%** | **Breached.** The AI gets completely blinded by the tricks. |
-| **3. Hardened AI Guard** | Retrained with the hacker's tricks | **94.78%** | **Protected.** The AI adapts and recovers most of its accuracy against the adversarial examples. |
+The features are then scaled using Scikit-Learn’s `StandardScaler`. The scaler is fitted on the training data only and then applied to the test data.
 
----
+### 2. Training the Defender
 
-## Setup and How to Run It
+`src/model_trainer.py` trains a Multi-Layer Perceptron (MLP) using PyTorch.
 
-### 1. Install the Libraries
-Make sure you have Python installed, open your terminal, and run:
+The model receives 78 network-traffic features and predicts whether a traffic record is benign or malicious. The trained model is wrapped using IBM’s Adversarial Robustness Toolbox (ART), which allows gradient-based attacks such as FGSM.
+
+A fixed random seed is used to make the training process more reproducible.
+
+### 3. FGSM Attack
+
+`src/adversarial_attack.py` applies the Fast Gradient Method using ART.
+
+FGSM makes a small change to each input in the direction that increases the model’s loss. In this project, epsilon is set to 0.1. The attack is tested on a 5,000-sample subset of the test data.
+
+### 4. Adversarial Training
+
+After the attack, the project creates adversarial examples from a 5,000-sample subset of the training data.
+
+These examples are added to the original training data, and the model is retrained. This helps the model learn to handle slightly modified inputs and improves its resistance to FGSM-style attacks.
+
+## Results
+
+| Stage | What Was Tested | Accuracy | Result |
+| :--- | :--- | ---: | :--- |
+| Standard AI defender | Clean test data | **99.97%** | Strong performance on normal traffic |
+| Under FGSM attack | Modified test data | **45.32%** | Large drop in accuracy |
+| Hardened AI defender | Model retrained with adversarial examples | **99.58%** | Accuracy recovered under attack |
+
+These results show that a model with very high normal accuracy can still be vulnerable to adversarial attacks. They also show that adversarial training can significantly improve robustness.
+
+## Technologies Used
+
+- Python
+- Pandas
+- NumPy
+- Scikit-Learn
+- PyTorch
+- IBM Adversarial Robustness Toolbox (ART)
+- JobLib
+
+## Project Structure
+
+```text
+AI-Network-Defender/
+│
+├── main.py                     # Runs the full training, attack, and defense pipeline
+├── predict.py                  # Loads the saved model and simulates packet inspection
+├── requirements.txt            # Python dependencies
+│
+└── src/
+    ├── data_loader.py          # Loads, cleans, splits, and scales the dataset
+    ├── model_trainer.py        # Trains the PyTorch MLP defender
+    └── adversarial_attack.py   # Applies FGSM and adversarial training
+```
+
+## How to Run
+
+Install the required libraries:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Train and Immunize the AI
-Run the main script to watch the AI get trained, see how easily it gets tricked, and then build the defense loop:
+Run the full pipeline:
+
 ```bash
 python main.py
 ```
 
-### 3. Test a Live Packet Stream
-Once the model is saved, run the live inspector script to simulate how the trained AI scans a live, incoming packet stream:
+Run the live packet inspection simulation:
+
 ```bash
 python predict.py
 ```
+
+## Main Takeaway
+
+A high accuracy score does not mean an AI security system is safe. My model reached 99.97% accuracy on clean data, but FGSM reduced its accuracy to 45.32%. After adversarial training, accuracy under attack rose to 99.58%.
+
+This project shows why AI security systems should be tested against deliberate manipulation, not only evaluated on normal data.
