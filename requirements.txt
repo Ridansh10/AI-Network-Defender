@@ -1,4 +1,6 @@
-pandas
 numpy
+pandas
 scikit-learn
+torch
 adversarial-robustness-toolbox
+matplotlib
