@@ -1,6 +1,6 @@
 from src.data_loader import load_and_clean_data
 from src.model_trainer import train_defender
-from src.adversarial_attack import run_adversarial_arena
+from src.adversarial_attack import run_adversarial_arena, run_epsilon_sweep
 import os
 import torch
 
@@ -24,13 +24,16 @@ def main():
     print("\n--------------------------------------------------\n")
 
     # Phase 3 and 4: Run FGSM attack and adversarial training
-    final_defended_model = run_adversarial_arena(
+    results = run_adversarial_arena(
         baseline_model,
         X_train,
         X_test,
         y_train,
         y_test
     )
+
+    # Phase 5: Run FGSM epsilon sweep and save the plotted chart
+    run_epsilon_sweep(baseline_model, X_test, y_test)
 
     # Save the hardened PyTorch model
     os.makedirs("models", exist_ok=True)
@@ -40,7 +43,6 @@ def main():
 
     print(f"\nHardened defender model saved to: {model_path}")
     print("\n--- PROTOCOL COMPLETE: DEFENSE IMMUNIZATION SUCCESSFUL ---\n")
-
 
 if __name__ == "__main__":
     main()
