@@ -11,7 +11,7 @@ The project is an educational research experiment. It is **not** a live intrusio
 ## Dataset
 
 - **Dataset:** CICIDS2017
-- **File used:** One Friday CSV file
+- **File used:** Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv
 - **Records processed:** 286,096
 - **Features used:** 78 numeric features
 - **Task:** Binary classification — benign vs. malicious traffic
