@@ -1,4 +1,11 @@
+# Python cache files
 __pycache__/
 *.pyc
+# Local dataset — download separately
 data/network_traffic.csv
-models/defended_network_ai.pkl
+# Generated model files
+models/*.pkl
+models/*.pt
+# Local virtual environments
+.venv/
+venv/

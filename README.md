@@ -1,96 +1,70 @@
 # AI Network Defender
 
-This project tests whether an AI model used to detect network intrusions can be fooled by small, intentional changes to network traffic data. It also tests whether the model can become more resistant to these attacks through adversarial training.
+An offline experiment exploring how adversarial attacks affect a neural-network classifier trained to distinguish benign from malicious network traffic.
 
-The project uses the CICIDS2017 dataset. A neural network is trained to classify network traffic as either benign or malicious. The Fast Gradient Method (FGSM) is then used to create slightly modified versions of the data that try to fool the model. Finally, the model is retrained using these adversarial examples to improve its robustness.
+## Overview
 
-## How It Works
+This project uses a PyTorch multilayer perceptron (MLP) to classify network-traffic records as benign or malicious. It then evaluates the model’s robustness against Fast Gradient Sign Method (FGSM) adversarial attacks and examines whether adversarial fine-tuning improves resilience.
 
-### 1. Data Loading
+The project is an educational research experiment. It is **not** a live intrusion-detection or network-blocking system.
 
-`src/data_loader.py` loads the CICIDS2017 dataset using Pandas and NumPy.
+## Dataset
 
-The code removes missing values and infinite values, converts the labels into a binary format, and keeps only numeric features. The data is split into 80% training data and 20% testing data.
+- **Dataset:** CICIDS2017
+- **File used:** One Friday CSV file
+- **Records processed:** 286,096
+- **Features used:** 78 numeric features
+- **Task:** Binary classification — benign vs. malicious traffic
 
-The features are then scaled using Scikit-Learn’s `StandardScaler`. The scaler is fitted on the training data only and then applied to the test data.
+## Approach
 
-### 2. Training the Defender
-
-`src/model_trainer.py` trains a Multi-Layer Perceptron (MLP) using PyTorch.
-
-The model receives 78 network-traffic features and predicts whether a traffic record is benign or malicious. The trained model is wrapped using IBM’s Adversarial Robustness Toolbox (ART), which allows gradient-based attacks such as FGSM.
-
-A fixed random seed is used to make the training process more reproducible.
-
-### 3. FGSM Attack
-
-`src/adversarial_attack.py` applies the Fast Gradient Method using ART.
-
-FGSM makes a small change to each input in the direction that increases the model’s loss. In this project, epsilon is set to 0.1. The attack is tested on a 5,000-sample subset of the test data.
-
-### 4. Adversarial Training
-
-After the attack, the project creates adversarial examples from a 5,000-sample subset of the training data.
-
-These examples are added to the original training data, and the model is retrained. This helps the model learn to handle slightly modified inputs and improves its resistance to FGSM-style attacks.
+1. Load and preprocess one CICIDS2017 CSV file.
+2. Select and prepare numeric features for classification.
+3. Train a PyTorch MLP classifier.
+4. Evaluate clean-data performance.
+5. Generate FGSM adversarial examples.
+6. Measure model accuracy under different attack strengths.
+7. Test adversarial fine-tuning.
+8. Run a fresh-attack epsilon sweep and visualize accuracy changes.
 
 ## Results
 
-| Stage | What Was Tested | Accuracy | Result |
-| :--- | :--- | ---: | :--- |
-| Standard AI defender | Clean test data | **99.97%** | Strong performance on normal traffic |
-| Under FGSM attack | Modified test data | **45.32%** | Large drop in accuracy |
-| Hardened AI defender | Model retrained with adversarial examples | **99.58%** | Accuracy recovered under attack |
+The model achieved strong classification performance on clean data. However, evaluation under newly generated adversarial examples showed that performance can decline as attack strength increases.
 
-These results show that a model with very high normal accuracy can still be vulnerable to adversarial attacks. They also show that adversarial training can significantly improve robustness.
+This highlights an important limitation: high accuracy on clean data, or on previously generated adversarial examples, does not necessarily prove that a model is robust against new adversarial attacks.
 
-## Technologies Used
+## Key Learning
+
+- Adversarial robustness must be evaluated using freshly generated attacks, not only examples used during training or earlier testing.
+- Clean accuracy alone is insufficient for assessing the reliability of machine-learning security systems.
+- Adversarial training can improve resistance to certain attacks, but it does not make a model universally secure.
+
+## Tools
 
 - Python
+- PyTorch
 - Pandas
 - NumPy
-- Scikit-Learn
-- PyTorch
-- IBM Adversarial Robustness Toolbox (ART)
-- JobLib
-
-## Project Structure
-
-```text
-AI-Network-Defender/
-│
-├── main.py                     # Runs the full training, attack, and defense pipeline
-├── predict.py                  # Loads the saved model and simulates packet inspection
-├── requirements.txt            # Python dependencies
-│
-└── src/
-    ├── data_loader.py          # Loads, cleans, splits, and scales the dataset
-    ├── model_trainer.py        # Trains the PyTorch MLP defender
-    └── adversarial_attack.py   # Applies FGSM and adversarial training
-```
+- Matplotlib
+- Jupyter Notebook
 
 ## How to Run
 
-Install the required libraries:
+1. Clone the repository.
+2. Install the required dependencies.
+3. Place the required CICIDS2017 CSV file in the expected data directory.
+4. Run the notebook or training script.
+5. Review the generated accuracy and epsilon-sweep results.
 
-```bash
-pip install -r requirements.txt
-```
+## Limitations
 
-Run the full pipeline:
+- Uses one CICIDS2017 CSV file rather than the complete multi-day dataset.
+- Performs offline classification and evaluation; it does not monitor or block live network traffic.
+- Results depend on the selected dataset file, preprocessing choices, and model configuration.
 
-```bash
-python main.py
-```
+## Future Improvements
 
-Run the live packet inspection simulation:
-
-```bash
-python predict.py
-```
-
-## Main Takeaway
-
-A high accuracy score does not mean an AI security system is safe. My model reached 99.97% accuracy on clean data, but FGSM reduced its accuracy to 45.32%. After adversarial training, accuracy under attack rose to 99.58%.
-
-This project shows why AI security systems should be tested against deliberate manipulation, not only evaluated on normal data.
+- Expand evaluation across additional CICIDS2017 files.
+- Compare additional adversarial attack methods.
+- Improve preprocessing and class-balance handling.
+- Document reproducible training and evaluation settings in more detail.
