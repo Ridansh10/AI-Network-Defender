@@ -91,7 +91,7 @@ def run_epsilon_sweep(model, X_test, y_test):
 
     os.makedirs("results", exist_ok=True)
 
-    plt.figure(figsize=(8, 15))
+    plt.figure(figsize=(10, 5))
     plt.plot(eps_values, accuracies, marker="o")
     plt.title("MLP accuracy under FGSM attacks")
     plt.xlabel("FGSM Epsilon")
